@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="GameScriptSettings" load_steps=2 format=3 uid="uid://dpl7vj62ro6iu"]
+
+[ext_resource type="Script" path="res://addons/GameScriptGodot/Runtime/Execution/GameScriptSettings.cs" id="1_y2m8n"]
+
+[resource]
+script = ExtResource("1_y2m8n")
+MaxFlags = 1
+InitialConversationPool = 1
+OutputPath = "res://GameScript"
+DatabasePath = "C:\\Users\\emful\\Desktop\\DATABASE\\EXPORT_DATA\\HELPER_DB___DO_NOT_SHIP.db"
+_MaxFlags = 1
+_InitialConversationPool = 1
+_OutputPath = "res://GameScript"
+_OutputPathAbsolute = "D:/Work/GameScriptGodot/GameScript"
+_DataPathAbsolute = "D:/Work/GameScriptGodot/GameScript/Data"
+_CodePathAbsolute = "D:/Work/GameScriptGodot/GameScript/Code"
+_ReferencesPathAbsolute = "D:/Work/GameScriptGodot/GameScript/References"
+_DataPathRelative = "GameScript/Data"
+_CodePathRelative = "GameScript/Code"
+_OutputPathRelative = "GameScript"
+_DataFilePathRelative = "GameScript/Data/GameScript.dat"
+_ReferencesPathRelative = "GameScript/References"
+_DatabasePath = "C:\\Users\\emful\\Desktop\\DATABASE\\EXPORT_DATA\\HELPER_DB___DO_NOT_SHIP.db"
+Import = false

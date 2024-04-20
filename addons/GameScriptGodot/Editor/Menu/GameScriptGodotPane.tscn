@@ -1,0 +1,54 @@
+[gd_scene load_steps=4 format=3 uid="uid://dvulxv1qynqjb"]
+
+[ext_resource type="Script" path="res://addons/GameScriptGodot/Editor/Menu/GameScriptGodotPane.cs" id="1_jimpq"]
+[ext_resource type="Script" path="res://addons/GameScriptGodot/Runtime/Execution/GameScriptSettings.cs" id="2_b55hm"]
+
+[sub_resource type="Resource" id="Resource_7uofe"]
+script = ExtResource("2_b55hm")
+MaxFlags = 4294966856
+InitialConversationPool = 1
+OutputPath = "res://"
+DatabasePath = "C:\\Users\\emful\\Desktop\\DATABASE\\EXPORT_DATA\\"
+Import = false
+
+[node name="GameScript" type="ScrollContainer" node_paths=PackedStringArray("TestButton", "OutputPathLabel", "OutputPathButton")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_jimpq")
+TestButton = NodePath("VBoxContainer/Hidden Test Button")
+OutputPathLabel = NodePath("VBoxContainer/Output Folder Selector/Path Label")
+OutputPathButton = NodePath("VBoxContainer/Output Folder Selector/Path Selector")
+Settings = SubResource("Resource_7uofe")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Output Folder Selector" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="Path Label" type="TextEdit" parent="VBoxContainer/Output Folder Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+editable = false
+context_menu_enabled = false
+shortcut_keys_enabled = false
+selecting_enabled = false
+drag_and_drop_selection_enabled = false
+virtual_keyboard_enabled = false
+middle_mouse_paste_enabled = false
+
+[node name="Path Selector" type="Button" parent="VBoxContainer/Output Folder Selector"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Select Generated Code Folder"
+
+[node name="Hidden Test Button" type="Button" parent="VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Generate Database Code"

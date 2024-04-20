@@ -1,0 +1,9 @@
+{
+    "files.eol": "\n",
+    "editor.rulers": [100],
+    "[csharp]": {
+      "editor.defaultFormatter": "csharpier.csharpier-vscode",
+      "editor.formatOnSave": true
+    },
+    "godotTools.editorPath.godot4": "c:\\Users\\emful\\Desktop\\Godot\\Godot_v4.2.2-stable_mono_win64.exe"
+}

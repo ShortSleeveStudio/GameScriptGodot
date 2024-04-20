@@ -1,0 +1,269 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using Godot;
+using Microsoft.Data.Sqlite;
+using static GameScript.DbHelper;
+using static GameScript.StringWriter;
+
+namespace GameScript
+{
+    static class Transpiler
+    {
+        #region API
+        /**
+         * This will build an array of Action's that will be looked up by index. The final index
+         * contains the "noop" Action used for all empty/null routines.
+         */
+        public static TranspilerResult Transpile(
+            string sqliteDatabasePath,
+            string routineOutputDirectory
+        )
+        {
+            // Create flag cache
+            TranspilerResult transpilerResult = new TranspilerResult();
+            HashSet<string> flagCache = new();
+            Dictionary<uint, uint> routineIdToIndex = new();
+            string importString = "";
+            string routinePath = null;
+
+            try
+            {
+                // Connect to database
+                using (SqliteConnection connection = new(SqlitePathToURI(sqliteDatabasePath)))
+                {
+                    // Open connection
+                    connection.Open();
+
+                    // Fetch imports
+                    using (SqliteCommand command = connection.CreateCommand())
+                    {
+                        command.CommandType = CommandType.Text;
+                        command.CommandText =
+                            $"SELECT * FROM {Routines.TABLE_NAME} "
+                            + $"WHERE type = '{(int)RoutineType.Import}';";
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            bool read = false;
+                            while (reader.Read())
+                            {
+                                if (read)
+                                {
+                                    throw new Exception("More than one import routine encountered");
+                                }
+                                read = true;
+                                Routines routine = Routines.FromReader(reader);
+                                importString = routine.code;
+                            }
+                        }
+                    }
+
+                    // Fetch row count
+                    long routineCount = 0;
+                    string routineWhereClause =
+                        $"WHERE code IS NOT NULL "
+                        + $"AND code != '' "
+                        + $"AND type != {(int)RoutineType.Import}";
+                    using (SqliteCommand command = connection.CreateCommand())
+                    {
+                        command.CommandType = CommandType.Text;
+                        command.CommandText =
+                            $"SELECT COUNT(*) as count "
+                            + $"FROM {Routines.TABLE_NAME} {routineWhereClause};";
+                        using (SqliteDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                                routineCount = reader.GetInt64(0);
+                        }
+                    }
+
+                    // Fetch all routines
+                    routinePath = Path.Combine(
+                        routineOutputDirectory,
+                        $"{EditorConstants.k_RoutineDirectoryClass}.cs"
+                    );
+                    using (StreamWriter writer = new StreamWriter(routinePath))
+                    {
+                        writer.NewLine = "\n";
+                        WriteLine(writer, 0, $"// {EditorConstants.k_GeneratedCodeWarning}");
+                        WriteLine(writer, 0, importString);
+                        WriteLine(writer, 0, "");
+                        WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
+                        WriteLine(writer, 0, "{");
+                        WriteLine(
+                            writer,
+                            1,
+                            $"public static partial class {EditorConstants.k_RoutineDirectoryClass}"
+                        );
+                        WriteLine(writer, 1, "{");
+                        WriteLine(writer, 2, $"static {EditorConstants.k_RoutineDirectoryClass}()");
+                        WriteLine(writer, 2, "{");
+                        // +2 for the two noop routines (code/condition)
+                        WriteLine(
+                            writer,
+                            3,
+                            $"Directory = new System.Action<"
+                                + $"{EditorConstants.k_ContextClass}>[{routineCount + 2}];"
+                        );
+
+                        // Write All Other Routines
+                        uint currentIndex = 0;
+                        for (uint i = 0; i < routineCount; i += EditorConstants.k_SqlBatchSize)
+                        {
+                            uint limit = EditorConstants.k_SqlBatchSize;
+                            uint offset = i;
+                            string query =
+                                $"SELECT * FROM {Routines.TABLE_NAME} "
+                                + $"{routineWhereClause} "
+                                + $"ORDER BY id ASC LIMIT {limit} OFFSET {offset};";
+                            using (SqliteCommand command = connection.CreateCommand())
+                            {
+                                uint j = 0;
+                                command.CommandType = CommandType.Text;
+                                command.CommandText = query;
+                                using (SqliteDataReader reader = command.ExecuteReader())
+                                {
+                                    while (reader.Read())
+                                    {
+                                        // Grab row
+                                        Routines routine = Routines.FromReader(reader);
+
+                                        // Transpile code
+                                        currentIndex = i + j;
+                                        j++;
+                                        switch (routine.type)
+                                        {
+                                            case (int)RoutineType.User:
+                                            case (int)RoutineType.Default:
+                                                WriteRoutine(
+                                                    routine,
+                                                    writer,
+                                                    flagCache,
+                                                    currentIndex,
+                                                    routineIdToIndex
+                                                );
+                                                break;
+                                            default:
+                                                throw new Exception(
+                                                    $"Unexpected routine type encountered: "
+                                                        + routine.type
+                                                );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Write Noop Routine - Code
+                        WriteRoutine(
+                            new Routines() { id = EditorConstants.k_NoopRoutineCodeId, code = "" },
+                            writer,
+                            flagCache,
+                            (uint)routineCount,
+                            routineIdToIndex
+                        );
+
+                        // Write Noop Routine - Condition
+                        WriteRoutine(
+                            new Routines()
+                            {
+                                id = EditorConstants.k_NoopRoutineConditionId,
+                                code = "",
+                                is_condition = true,
+                            },
+                            writer,
+                            flagCache,
+                            (uint)routineCount + 1,
+                            routineIdToIndex
+                        );
+
+                        WriteLine(writer, 2, "}"); // Initialize
+                        WriteLine(writer, 1, "}"); // Class
+                        WriteLine(writer, 0, "}"); // Namespace
+                    }
+                }
+
+                // Write flags
+                WriteFlags(routineOutputDirectory, flagCache);
+            }
+            catch (Exception e)
+            {
+                GD.PushError(e);
+                if (!string.IsNullOrEmpty(routinePath) && File.Exists(routinePath))
+                {
+                    File.Delete(routinePath);
+                }
+                transpilerResult.WasError = true;
+            }
+
+            // Return transpile result
+            transpilerResult.MaxFlags = (uint)flagCache.Count;
+            transpilerResult.RoutineIdToIndex = routineIdToIndex;
+            return transpilerResult;
+        }
+        #endregion
+
+        #region Helpers
+        static void WriteRoutine(
+            Routines routine,
+            StreamWriter writer,
+            HashSet<string> flagCache,
+            uint methodIndex,
+            Dictionary<uint, uint> routineIdToIndex
+        )
+        {
+            routineIdToIndex.Add((uint)routine.id, methodIndex);
+            WriteLine(
+                writer,
+                3,
+                $"Directory[{methodIndex}] = ({EditorConstants.k_ContextClass} ctx) =>"
+            );
+            WriteLine(writer, 3, "{");
+            try
+            {
+                string generatedCode = TranspilingTreeWalker.Transpile(routine, flagCache);
+                if (generatedCode.Length > 0)
+                {
+                    string[] lines = generatedCode.Split("\n");
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        if (lines[i].Length == 0)
+                            continue;
+                        WriteLine(writer, 4, lines[i]);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                WriteLine(writer, 3, $"    /* Error in routine: {routine.id} */");
+                GD.PushError(e);
+            }
+            WriteLine(writer, 3, "};");
+        }
+
+        static void WriteFlags(string outputDirectory, HashSet<string> flagCache)
+        {
+            string path = Path.Combine(outputDirectory, $"{EditorConstants.k_RoutineFlagEnum}.cs");
+            if (File.Exists(path))
+                File.Delete(path);
+            using (StreamWriter writer = new StreamWriter(path))
+            {
+                writer.NewLine = "\n";
+                WriteLine(writer, 0, $"// {EditorConstants.k_GeneratedCodeWarning}");
+                WriteLine(writer, 0, "");
+                WriteLine(writer, 0, $"namespace {RuntimeConstants.k_AppName}");
+                WriteLine(writer, 0, "{");
+                WriteLine(writer, 1, $"public enum {EditorConstants.k_RoutineFlagEnum}");
+                WriteLine(writer, 1, "{");
+                foreach (string flag in flagCache)
+                {
+                    WriteLine(writer, 2, flag + ",");
+                }
+                WriteLine(writer, 1, "}"); // enum
+                WriteLine(writer, 0, "}"); // namespace
+            }
+        }
+        #endregion
+    }
+}
