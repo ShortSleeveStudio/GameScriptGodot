@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="GameScriptGodot"
+run/main_scene="res://TestRig/Nodes/TestRig.tscn"
 config/features=PackedStringArray("4.2", "C#", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GameScriptRunner="*res://TestRig/Nodes/GameScriptRunner.tscn"
 
 [dotnet]
 

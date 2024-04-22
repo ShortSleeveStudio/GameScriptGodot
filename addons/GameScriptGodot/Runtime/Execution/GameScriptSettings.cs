@@ -59,18 +59,6 @@ namespace GameScript
                 _ReferencesPathRelative =
                     _OutputPathRelative + "/" + RuntimeConstants.k_ReferencesSubDirectory;
 
-                GD.Print(_OutputPath);
-                GD.Print(_OutputPathAbsolute);
-                GD.Print(_DataPathAbsolute);
-                GD.Print(_CodePathAbsolute);
-                GD.Print(_ReferencesPathAbsolute);
-
-                GD.Print(_OutputPathRelative);
-                GD.Print(_DataPathRelative);
-                GD.Print(_CodePathRelative);
-                GD.Print(_DataFilePathRelative);
-                GD.Print(_ReferencesPathRelative);
-
                 EmitChanged();
             }
         }

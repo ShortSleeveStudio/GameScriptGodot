@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://nvtptrcqwagu"]
+
+[ext_resource type="Script" path="res://TestRig/Tester.cs" id="1_3of3d"]
+[ext_resource type="Resource" uid="uid://oo27maufrw2c" path="res://TestRig/Resources/TestRigSettings.tres" id="2_t30k4"]
+[ext_resource type="Resource" uid="uid://bfo6kydxoyq5r" path="res://GameScript/References/Conversations/Act_1/Location_Ring World/c1_Talk to Master Chef!.tres" id="3_llu6l"]
+[ext_resource type="Resource" uid="uid://bqu8qg0suj373" path="res://GameScript/References/Locales/L0_en_US.tres" id="4_f572r"]
+
+[node name="HBoxContainer" type="HBoxContainer" node_paths=PackedStringArray("ConversationContent")]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_3of3d")
+ConversationContent = NodePath("ConversationsPanel/ConversationContent")
+TestSettings = ExtResource("2_t30k4")
+ConversationReference = ExtResource("3_llu6l")
+LocaleReference = ExtResource("4_f572r")
+
+[node name="ControlPanel" type="VBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StartButton" type="Button" parent="ControlPanel"]
+layout_mode = 2
+text = "Start Conversation"
+
+[node name="ConversationsPanel" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+
+[node name="ConversationContent" type="VBoxContainer" parent="ConversationsPanel"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

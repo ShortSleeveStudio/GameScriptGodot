@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://7tltr4ugjyvh"]
+
+[ext_resource type="Script" path="res://addons/GameScriptGodot/Runtime/Execution/Runner.cs" id="1_3ihss"]
+[ext_resource type="Resource" uid="uid://dpl7vj62ro6iu" path="res://addons/GameScriptGodot/Runtime/Resources/GameScriptSettings.tres" id="2_6gosy"]
+
+[node name="GameScriptRunner" type="Node"]
+script = ExtResource("1_3ihss")
+m_ExecutionOrder = 1
+m_Settings = ExtResource("2_6gosy")

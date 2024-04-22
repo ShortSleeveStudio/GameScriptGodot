@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://csum5b6dabssi"]
+
+[ext_resource type="Script" path="res://TestRig/ConversationUI.cs" id="1_pa6um"]
+
+[node name="Control" type="Control" node_paths=PackedStringArray("HistoryContent", "ChoiceContent")]
+layout_mode = 3
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 300.0
+script = ExtResource("1_pa6um")
+HistoryContent = NodePath("ConversationHistory/ConversationContent")
+ChoiceContent = NodePath("ConversationChoices/ChoiceContent")
+
+[node name="StopButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 0.05
+grow_horizontal = 2
+grow_vertical = 2
+text = "Stop"
+
+[node name="ConversationHistory" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_bottom = 0.6
+offset_top = 35.0
+offset_right = 300.0
+offset_bottom = 35.0
+
+[node name="ConversationContent" type="VBoxContainer" parent="ConversationHistory"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ConversationChoices" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.65
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="ChoiceContent" type="VBoxContainer" parent="ConversationChoices"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
