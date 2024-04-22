@@ -3,10 +3,12 @@
 [ext_resource type="Script" path="res://TestRig/ConversationUI.cs" id="1_pa6um"]
 
 [node name="Control" type="Control" node_paths=PackedStringArray("HistoryContent", "ChoiceContent")]
+custom_minimum_size = Vector2(300, 648)
 layout_mode = 3
 anchors_preset = 9
 anchor_bottom = 1.0
 offset_right = 300.0
+grow_vertical = 2
 script = ExtResource("1_pa6um")
 HistoryContent = NodePath("ConversationHistory/ConversationContent")
 ChoiceContent = NodePath("ConversationChoices/ChoiceContent")
@@ -23,10 +25,10 @@ text = "Stop"
 [node name="ConversationHistory" type="ScrollContainer" parent="."]
 layout_mode = 1
 anchors_preset = -1
-anchor_bottom = 0.6
+anchor_bottom = 0.654
 offset_top = 35.0
 offset_right = 300.0
-offset_bottom = 35.0
+offset_bottom = 0.00799561
 
 [node name="ConversationContent" type="VBoxContainer" parent="ConversationHistory"]
 layout_mode = 2
@@ -44,3 +46,5 @@ anchor_bottom = 1.0
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+
+[connection signal="pressed" from="StopButton" to="." method="Stop"]

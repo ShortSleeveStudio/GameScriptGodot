@@ -45,8 +45,11 @@ namespace GameScript
                 IsImporting = true;
 
                 // Ensure Directory Structure
-                if (EnsureDirectoryStructure(settings))
+                if (!EnsureDirectoryStructure(settings))
+                {
                     GD.PushError($"Output path was invalid: {settings.OutputPathAbsolute}");
+                    return;
+                }
 
                 TranspilerResult transpilerResult = default;
                 ConversationDataGeneratorResult conversationResult = default;

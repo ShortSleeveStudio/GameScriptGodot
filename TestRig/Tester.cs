@@ -30,6 +30,9 @@ public partial class Tester : Godot.Node
         m_ChoiceItemPackedScene = GD.Load<PackedScene>("res://TestRig/Nodes/ChoiceItem.tscn");
         m_HistoryItemPackedScene = GD.Load<PackedScene>("res://TestRig/Nodes/HistoryItem.tscn");
         m_ConversationPackedScene = GD.Load<PackedScene>("res://TestRig/Nodes/Conversation.tscn");
+
+        // TODO - make this selectable
+        OnLocaleSelected();
     }
     #endregion
 

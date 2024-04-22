@@ -12,12 +12,17 @@ ActorText = NodePath("ActorText")
 VoiceText = NodePath("VoiceText")
 
 [node name="ActorText" type="Label" parent="."]
+custom_minimum_size = Vector2(300, 23)
 layout_mode = 2
 text = "Actor Name:"
+autowrap_mode = 3
 
-[node name="VoiceText" type="Label" parent="." node_paths=PackedStringArray("ActorText", "VoiceText")]
+[node name="VoiceText" type="Label" parent="."]
+custom_minimum_size = Vector2(300, 23)
 layout_mode = 2
 text = "Text to Speak"
-script = ExtResource("1_btndb")
-ActorText = NodePath("../ActorText")
-VoiceText = NodePath(".")
+autowrap_mode = 3
+
+[node name="Control" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2

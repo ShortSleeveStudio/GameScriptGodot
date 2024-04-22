@@ -11,8 +11,14 @@ public partial class HistoryItemUI : Node
     #endregion
 
     #region API
-    public void SetActorName(string actorName) => ActorText.Text = actorName;
+    public void SetActorName(string actorName)
+    {
+        ActorText.Text = actorName;
+    }
 
-    public void SetVoiceText(string voiceText) => VoiceText.Text = voiceText;
+    public void SetVoiceText(string voiceText)
+    {
+        VoiceText.Text = voiceText;
+    }
     #endregion
 }

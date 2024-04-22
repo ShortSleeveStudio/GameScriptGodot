@@ -30,7 +30,7 @@ namespace GameScript
             {
                 // Compose Response
                 byte[] result = file.GetBuffer((long)file.GetLength());
-                BinaryFormatter serializer = new();
+                BinaryFormatter serializer = new() { Binder = new CustomSerializationBinder() };
                 using (System.IO.MemoryStream dataStream = new System.IO.MemoryStream(result))
                 {
                     using (GZipStream zipStream = new(dataStream, CompressionMode.Decompress))
