@@ -46,11 +46,15 @@ namespace GameScript
 
         #region Static State
         private static Locale s_BinarySearchLocale = new();
+        private static Localization s_BinarySearchLocalization = new();
         private static Conversation s_BinarySearchConversation = new();
         private static EmptyProperty s_BinarySearchProperty = new("");
         #endregion
 
         #region Static Methods
+        public static Localization FindLocalization(uint localizationId) =>
+            Find(localizationId, s_BinarySearchLocalization, Instance.Localizations);
+
         public static Locale FindLocale(uint localeId) =>
             Find(localeId, s_BinarySearchLocale, Instance.Locales);
 
