@@ -30,6 +30,18 @@ namespace GameScript
             }
         }
         private uint _InitialConversationPool = 1;
+
+        [Export]
+        public bool PreventSingleNodeChoices
+        {
+            get => _PreventSingleNodeChoices;
+            set
+            {
+                _PreventSingleNodeChoices = value;
+                EmitChanged();
+            }
+        }
+        private bool _PreventSingleNodeChoices;
         #endregion
 
         #region Editor Settings

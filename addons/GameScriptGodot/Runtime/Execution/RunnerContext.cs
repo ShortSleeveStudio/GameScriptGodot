@@ -32,6 +32,7 @@ namespace GameScript
         private MachineState m_CurrentState;
         private List<Node> m_AvailableNodes;
         private Lease m_DummyLease;
+        private GameScriptSettings m_Settings;
 
         internal RunnerContext(GameScriptSettings settings)
         {
@@ -42,6 +43,7 @@ namespace GameScript
             m_RoutineState = new(settings.MaxFlags, this);
             m_AvailableNodes = new(k_DefaultEdgeCapacity);
             m_DummyLease = Lease.DummyLease();
+            m_Settings = settings;
         }
 
         #region Execution
@@ -181,7 +183,18 @@ namespace GameScript
 
                         // Node Decision
                         if (
-                            m_AvailableNodes.Count > 1
+                            // If we have multiple choices or
+                            // we allow single node choices and there's a single choice with UI text
+                            // and all nodes use the same actor and we're not preventing a response
+                            // *phew*
+                            (
+                                (m_AvailableNodes.Count > 1)
+                                || (
+                                    m_AvailableNodes.Count == 1
+                                    && !m_Settings.PreventSingleNodeChoices
+                                    && m_AvailableNodes[0].UIResponseText != null
+                                )
+                            )
                             && allEdgesSameActor
                             && !m_Node.IsPreventResponse
                         )
