@@ -13,6 +13,7 @@ namespace GameScript
         public const string k_RoutineDirectoryClass = "RoutineDirectory";
         public const string k_RoutineInitializerClass = "RoutineInitializer";
         public const string k_RoutineFlagEnum = "RoutineFlag";
+        public const string k_ActorEnum = "Cast";
         public const string k_LocaleFieldPrefix = "locale_";
         public const string k_FilterFieldPrefix = "filter_";
         public const string k_LocalizationReferenceFolderSuffix = "_localizations";
