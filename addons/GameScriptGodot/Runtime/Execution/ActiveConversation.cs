@@ -4,11 +4,17 @@ namespace GameScript
 {
     public struct ActiveConversation
     {
+        internal GameScriptRunner Runner;
         internal uint SequenceNumber;
         internal uint ContextId;
 
-        internal ActiveConversation(uint sequenceToken, uint cancellationToken)
+        internal ActiveConversation(
+            GameScriptRunner runner,
+            uint sequenceToken,
+            uint cancellationToken
+        )
         {
+            Runner = runner;
             SequenceNumber = sequenceToken;
             ContextId = cancellationToken;
         }

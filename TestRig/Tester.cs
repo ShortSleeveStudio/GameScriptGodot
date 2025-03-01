@@ -15,6 +15,9 @@ public partial class Tester : Godot.Node
 
     [Export]
     public LocaleReference LocaleReference;
+
+    [Export]
+    public GameScriptRunner Runner;
     #endregion
 
     #region Private State
@@ -30,6 +33,9 @@ public partial class Tester : Godot.Node
         m_ChoiceItemPackedScene = GD.Load<PackedScene>("res://TestRig/Nodes/ChoiceItem.tscn");
         m_HistoryItemPackedScene = GD.Load<PackedScene>("res://TestRig/Nodes/HistoryItem.tscn");
         m_ConversationPackedScene = GD.Load<PackedScene>("res://TestRig/Nodes/Conversation.tscn");
+
+        // Load Database
+        Runner.Initialize();
 
         // TODO - make this selectable
         OnLocaleSelected();
@@ -49,14 +55,15 @@ public partial class Tester : Godot.Node
             OnConversationFinished,
             m_HistoryItemPackedScene,
             m_ChoiceItemPackedScene,
-            TestSettings
+            TestSettings,
+            Runner
         );
         ConversationContent.AddChild(conversationUI);
     }
 
     public void OnLocaleSelected()
     {
-        TestSettings.CurrentLocale = Database.FindLocale(LocaleReference.Id);
+        TestSettings.CurrentLocale = Runner.Database.FindLocale(LocaleReference.Id);
     }
 
     public void OnConversationFinished(ConversationUI conversationUI)

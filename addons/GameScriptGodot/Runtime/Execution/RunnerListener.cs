@@ -60,7 +60,9 @@ namespace GameScript
         }
 
         public bool IsValid() =>
-            m_Context.SequenceNumber == m_OriginalSequenceNumber && !m_Signalled;
+            m_Context != null
+            && m_Context.SequenceNumber == m_OriginalSequenceNumber
+            && !m_Signalled;
 
         public void OnDecisionMade(Node node)
         {
@@ -71,8 +73,8 @@ namespace GameScript
         }
     }
 
-    /**Runner listeners can react to changes in conversation runner state.*/
-    public interface IRunnerListener
+    /**GameScript listeners can react to changes in conversation runner state.*/
+    public interface IGameScriptListener
     {
         /**
          * Called before the conversation starts.
@@ -85,9 +87,9 @@ namespace GameScript
         public void OnNodeEnter(Node node, ReadyNotifier readyNotifier);
 
         /**
-         * Called when a decision must be made to proceed with the conversation.
+         * Called before proceeding to find the next available node when a decision must be made.
          */
-        public void OnNodeDecision(List<Node> nodes, DecisionNotifier decisionNotifier);
+        public void OnNodeExit(List<Node> nodes, DecisionNotifier decisionNotifier);
 
         /**
          * Called before proceeding to find the next available node.

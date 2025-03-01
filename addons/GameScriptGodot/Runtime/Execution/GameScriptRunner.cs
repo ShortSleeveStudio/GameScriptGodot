@@ -5,19 +5,8 @@ using Godot;
 
 namespace GameScript
 {
-    public partial class Runner : Godot.Node
+    public partial class GameScriptRunner : Godot.Node
     {
-        #region Private State
-        // Using linked lists so we can iterate and add
-        private LinkedList<RunnerContext> m_ContextsActive;
-        private LinkedList<RunnerContext> m_ContextsInactive;
-        private Thread m_MainThread;
-        #endregion
-
-        #region Singleton
-        private static Runner Instance { get; set; }
-        #endregion
-
         #region Inspector Variables
         [Export]
         public int m_ExecutionOrder = 10;
@@ -26,36 +15,56 @@ namespace GameScript
         public GameScriptSettings m_Settings;
         #endregion
 
-        #region API
-        public static ActiveConversation StartConversation(
+        #region State
+        // Using linked lists so we can iterate and add
+        private LinkedList<RunnerContext> m_ContextsActive;
+        private LinkedList<RunnerContext> m_ContextsInactive;
+        private Thread m_MainThread;
+        private GameScriptDatabase m_Database;
+        #endregion
+
+        #region Public API
+        public GameScriptDatabase Database => m_Database;
+
+        // TODO: make this async
+        public void Initialize()
+        {
+            // Deserialize database
+            if (m_Database != null)
+                throw new Exception("Tried to initialize GameScript more than once");
+            m_Database = new();
+            m_Database.Initialize(m_Settings);
+        }
+
+        public ActiveConversation StartConversation(
             ConversationReference conversationRef,
-            IRunnerListener listener
+            IGameScriptListener listener
         ) => StartConversation(conversationRef.Id, listener);
 
-        public static ActiveConversation StartConversation(
+        public ActiveConversation StartConversation(
             uint conversationId,
-            IRunnerListener listener
+            IGameScriptListener listener
         )
         {
-            Conversation conversation = Database.FindConversation(conversationId);
+            Conversation conversation = m_Database.FindConversation(conversationId);
             return StartConversation(conversation, listener);
         }
 
-        public static ActiveConversation StartConversation(
+        public ActiveConversation StartConversation(
             Conversation conversation,
-            IRunnerListener listener
+            IGameScriptListener listener
         )
         {
             EnsureMainThread();
-            RunnerContext context = Instance.ContextAcquire();
+            RunnerContext context = ContextAcquire();
             context.Start(conversation, listener);
-            return new(context.SequenceNumber, context.ContextId);
+            return new(this, context.SequenceNumber, context.ContextId);
         }
 
-        public static void SetFlag(ActiveConversation active, int flag)
+        public void SetFlag(ActiveConversation active, int flag)
         {
             EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 throw new Exception(
                     "You can't set a flag for conversations that have already ended"
@@ -63,9 +72,9 @@ namespace GameScript
             ctx.SetFlag(flag);
         }
 
-        public static void SetFlagForAll(int flag)
+        public void SetFlagForAll(int flag)
         {
-            LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
+            LinkedListNode<RunnerContext> node = m_ContextsActive.First;
             while (node != null)
             {
                 LinkedListNode<RunnerContext> next = node.Next;
@@ -74,10 +83,10 @@ namespace GameScript
             }
         }
 
-        public static void RegisterFlagListener(ActiveConversation active, Action<int> listener)
+        public void RegisterFlagListener(ActiveConversation active, Action<int> listener)
         {
             EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 throw new Exception(
                     "You can't register a flag listener on a conversation that's already ended"
@@ -85,70 +94,56 @@ namespace GameScript
             ctx.OnFlagRaised += listener;
         }
 
-        public static void UnregisterFlagListener(ActiveConversation active, Action<int> listener)
+        public void UnregisterFlagListener(ActiveConversation active, Action<int> listener)
         {
             EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 return;
             ctx.OnFlagRaised -= listener;
         }
 
-        public static bool IsActive(ActiveConversation active)
+        public bool IsActive(ActiveConversation active)
         {
             EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            RunnerContext ctx = FindContextActive(active);
             return ctx != null;
         }
 
-        public static void StopConversation(ActiveConversation active)
+        public void StopConversation(ActiveConversation active)
         {
             EnsureMainThread();
-            RunnerContext ctx = Instance.FindContextActive(active);
+            RunnerContext ctx = FindContextActive(active);
             if (ctx == null)
                 // we assume the conversation is already ended. Thus this call is idempotent.
                 return;
-            Instance.ContextRelease(ctx);
+            ContextRelease(ctx);
         }
 
-        public static void StopAllConversations()
+        public void StopAllConversations()
         {
             EnsureMainThread();
-            LinkedListNode<RunnerContext> node = Instance.m_ContextsActive.First;
+            LinkedListNode<RunnerContext> node = m_ContextsActive.First;
             while (node != null)
             {
                 LinkedListNode<RunnerContext> next = node.Next;
-                Instance.ContextRelease(node);
+                ContextRelease(node);
                 node = next;
             }
-        }
-
-        private static void EnsureMainThread()
-        {
-            if (Instance.m_MainThread != Thread.CurrentThread)
-                throw new Exception("Runner APIs can only be used from the main thread");
         }
         #endregion
 
         #region Godot Lifecycle Methods
         public override void _Ready()
         {
-            // Initialize state
+            // Initialize runtime state
+            m_MainThread = Thread.CurrentThread;
             m_ContextsActive = new();
             m_ContextsInactive = new();
             for (uint i = 0; i < m_Settings.InitialConversationPool; i++)
             {
                 m_ContextsInactive.AddLast(new RunnerContext(m_Settings));
             }
-            m_MainThread = Thread.CurrentThread;
-
-            // Load Database
-            Database.Initialize(m_Settings);
-
-            // Singleton
-            if (Instance != null)
-                GD.PushWarning("Singleton set multiple times");
-            Instance = this;
         }
 
         public override void _Process(double delta)
@@ -224,6 +219,12 @@ namespace GameScript
                 node = next;
             }
             return null;
+        }
+
+        private void EnsureMainThread()
+        {
+            if (m_MainThread != Thread.CurrentThread)
+                throw new Exception("Runner APIs can only be used from the main thread");
         }
         #endregion
     }

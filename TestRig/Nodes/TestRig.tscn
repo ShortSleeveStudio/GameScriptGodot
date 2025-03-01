@@ -1,11 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://nvtptrcqwagu"]
+[gd_scene load_steps=7 format=3 uid="uid://nvtptrcqwagu"]
 
 [ext_resource type="Script" path="res://TestRig/Tester.cs" id="1_3of3d"]
 [ext_resource type="Resource" uid="uid://oo27maufrw2c" path="res://TestRig/Resources/TestRigSettings.tres" id="2_t30k4"]
 [ext_resource type="Resource" uid="uid://bl453nkrhjmbr" path="res://GameScript/References/Conversations/Act_1/Location_Ring World/c1_Talk to Master Chef!.tres" id="3_3jy5p"]
 [ext_resource type="Resource" uid="uid://b14h3jxs3t5ee" path="res://GameScript/References/Locales/L0_en_US.tres" id="4_wxb4a"]
+[ext_resource type="Script" path="res://addons/GameScriptGodot/Runtime/Execution/GameScriptRunner.cs" id="5_gttp0"]
+[ext_resource type="Resource" uid="uid://dpl7vj62ro6iu" path="res://addons/GameScriptGodot/Runtime/Resources/GameScriptSettings.tres" id="6_xy2jo"]
 
-[node name="HBoxContainer" type="HBoxContainer" node_paths=PackedStringArray("ConversationContent")]
+[node name="HBoxContainer" type="HBoxContainer" node_paths=PackedStringArray("ConversationContent", "Runner")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -18,6 +20,11 @@ ConversationContent = NodePath("ConversationsPanel/ConversationContent")
 TestSettings = ExtResource("2_t30k4")
 ConversationReference = ExtResource("3_3jy5p")
 LocaleReference = ExtResource("4_wxb4a")
+Runner = NodePath("Node")
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("5_gttp0")
+m_Settings = ExtResource("6_xy2jo")
 
 [node name="ControlPanel" type="VBoxContainer" parent="."]
 layout_mode = 2

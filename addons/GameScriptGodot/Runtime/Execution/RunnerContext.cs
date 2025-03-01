@@ -23,7 +23,7 @@ namespace GameScript
         private RunnerRoutineState m_RoutineState;
         private Conversation m_Conversation;
         private Node m_Node;
-        private IRunnerListener m_Listener;
+        private IGameScriptListener m_Listener;
         private bool m_OnReadyCalled;
         private Action m_OnReady;
         private Node m_OnDecisionMadeValue;
@@ -49,7 +49,7 @@ namespace GameScript
         #region Execution
         internal event Action<int> OnFlagRaised;
 
-        internal void Start(Conversation conversation, IRunnerListener listener)
+        internal void Start(Conversation conversation, IGameScriptListener listener)
         {
             m_Node = conversation.RootNode;
             m_Listener = listener;
@@ -123,21 +123,12 @@ namespace GameScript
                     }
                     case MachineState.NodeExit:
                     {
-                        m_Listener.OnNodeExit(m_Node, new(SequenceNumber, this, m_OnReady));
-                        m_CurrentState = MachineState.NodeExitWait;
-                        goto case MachineState.NodeExitWait;
-                    }
-                    case MachineState.NodeExitWait:
-                    {
-                        if (!m_OnReadyCalled)
-                            return true;
-                        m_OnReadyCalled = false;
-                        m_CurrentState = MachineState.NodeDecision;
-                        goto case MachineState.NodeDecision;
-                    }
-                    case MachineState.NodeDecision:
-                    {
-                        // Gather available edges
+                        // Three possiblities, we need to determine which one it is:
+                        // 1) Conversation Exit - No Available Edges
+                        // 2) Decision - Multiple Available Edges
+                        // 3) Next Node - One Available Edge
+
+                        // Start by determining which nodes are available to go to
                         uint actorId = 0;
                         bool allEdgesSameActor = true;
                         byte priority = 0;
@@ -173,15 +164,13 @@ namespace GameScript
                         // Conversation Exit - No Available Edges
                         if (m_AvailableNodes.Count == 0)
                         {
-                            m_Listener.OnConversationExit(
-                                m_Conversation,
-                                new(SequenceNumber, this, m_OnReady)
-                            );
-                            m_CurrentState = MachineState.ConversationExitWait;
-                            goto case MachineState.ConversationExitWait;
+                            m_Listener.OnNodeExit(m_Node, new(SequenceNumber, this, m_OnReady));
+                            m_Node = null; // There is no next node
+                            m_CurrentState = MachineState.NodeExitWait;
+                            goto case MachineState.NodeExitWait;
                         }
 
-                        // Node Decision
+                        // Node Decision - Multiple Available Edges
                         if (
                             // If we have multiple choices or
                             // we allow single node choices and there's a single choice with UI text
@@ -199,7 +188,7 @@ namespace GameScript
                             && !m_Node.IsPreventResponse
                         )
                         {
-                            m_Listener.OnNodeDecision(
+                            m_Listener.OnNodeExit(
                                 m_AvailableNodes,
                                 new(SequenceNumber, this, m_OnDecisionMade)
                             );
@@ -207,11 +196,12 @@ namespace GameScript
                             goto case MachineState.NodeDecisionWait;
                         }
 
-                        // Node Enter
+                        // Next Node - One Available Edge
+                        m_Listener.OnNodeExit(m_Node, new(SequenceNumber, this, m_OnReady));
                         m_AvailableNodes.Clear();
                         m_Node = highestPriorityNode;
-                        m_CurrentState = MachineState.NodeEnter;
-                        goto case MachineState.NodeEnter;
+                        m_CurrentState = MachineState.NodeExitWait;
+                        goto case MachineState.NodeExitWait;
                     }
                     case MachineState.NodeDecisionWait:
                     {
@@ -223,6 +213,28 @@ namespace GameScript
                         m_OnDecisionMadeValue = null;
                         m_CurrentState = MachineState.NodeEnter;
                         goto case MachineState.NodeEnter;
+                    }
+                    case MachineState.NodeExitWait:
+                    {
+                        if (!m_OnReadyCalled)
+                            return true;
+                        m_OnReadyCalled = false;
+                        if (m_Node == null)
+                        {
+                            m_CurrentState = MachineState.ConversationExit;
+                            goto case MachineState.ConversationExit;
+                        }
+                        m_CurrentState = MachineState.NodeEnter;
+                        goto case MachineState.NodeEnter;
+                    }
+                    case MachineState.ConversationExit:
+                    {
+                        m_Listener.OnConversationExit(
+                            m_Conversation,
+                            new(SequenceNumber, this, m_OnReady)
+                        );
+                        m_CurrentState = MachineState.ConversationExitWait;
+                        goto case MachineState.ConversationExitWait;
                     }
                     case MachineState.ConversationExitWait:
                     {
@@ -347,9 +359,8 @@ namespace GameScript
             NodeEnterWait,
             NodeExecute,
             NodeExit,
+            NodeDecisionWait, // Really just NodeExitWait, but this keeps things simple
             NodeExitWait,
-            NodeDecision,
-            NodeDecisionWait,
             ConversationExit,
             ConversationExitWait,
         }
